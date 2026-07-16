@@ -495,12 +495,19 @@ def main():
         return
 
     by_idx = {c["idx"]: c for c in computed}
-    insert_at = fieldnames.index("Eligibility Checks")
+    # Idempotent under reruns: strip out any SizeRank/Credentialing/Patient
+    # Cost Estimates columns already present (from a prior --write) before
+    # reinserting them, so rerunning never duplicates a column.
+    base_fieldnames = [
+        f for f in fieldnames
+        if f not in ("SizeRank", "Credentialing", "Patient Cost Estimates")
+    ]
+    insert_at = base_fieldnames.index("Eligibility Checks")
     new_fieldnames = (
         ["SizeRank"]
-        + fieldnames[:insert_at]
+        + base_fieldnames[:insert_at]
         + ["Credentialing", "Eligibility Checks", "Patient Cost Estimates"]
-        + fieldnames[insert_at + 1:]
+        + base_fieldnames[insert_at + 1:]
     )
 
     for idx, row in enumerate(rows):
